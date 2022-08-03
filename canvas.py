@@ -146,7 +146,7 @@ class ScrollableCanvas(tk.Canvas):
 
         # initialize and place canvas on form container
         super().__init__(master = self.frm_container, **kwargs)
-        self.grid(row = 0, column = 0, sticky = 'ewns')
+        self.grid(row = 0, column = 0)
         # place & configure scrollbars
         sb_x = ttk.Scrollbar(master = self.frm_container, orient = 'horizontal', command = self.xview)
         sb_x.grid(row = 1, column = 0, sticky= 'ew')
@@ -169,12 +169,20 @@ class PageCanvas(ScrollableCanvas):
         # ...
         self.bind('<Motion>', self.on_motion)
 
+        self.bind('<Double-Button-1>', lambda event: self.adjust_size())
+        self.bind("<MouseWheel>", lambda event: self.yview_scroll(-event.delta//120, "units"))
+
     # override tk.Canvas method with custom image creation
     def create_image(self, image):
         tk_image = ImageTk.PhotoImage(image)
         self.canvas_img_id = super().create_image(0, 0, image=tk_image, anchor='nw')
         self.tk_image = tk_image # due to bug (https://blog.furas.pl/python-tkinter-how-to-load-display-and-replace-image-on-label-button-or-canvas-gb.html)
+        self.adjust_size()
         self.configure(scrollregion=self.bbox('all'))
+
+    def adjust_size(self):
+        self.master.update()
+        self.configure(width=min(self.tk_image.width(), self.master.winfo_width()-30), height=min(self.tk_image.height(), self.master.winfo_height()))
 
     def on_motion(self, event):
         pass
