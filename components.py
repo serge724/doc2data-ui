@@ -273,6 +273,7 @@ class PageLevelProcessing(ttk.Frame):
         self.state = state
         self.state.file_selected_idx.trace_add('write', self.on_file_change)
         self.state.page_edit_mode.trace_add('write', self.on_mode_change)
+        self.delay = 1
 
         # define ui components
         self.canvas = PageCanvas(master, state, bg = 'gray')
@@ -383,9 +384,9 @@ class PageLevelProcessing(ttk.Frame):
         self.state.page_edit_mode.set('preprocessing')
         self.state.page_bbox_label_idx.set(0)
         if self.state.page.labels.crop_bbox is not None:
-            self.after(900, lambda: self.state.page_edit_mode.set('ocr'))
+            self.after(900 * self.delay, lambda: self.state.page_edit_mode.set('ocr'))
         if self.state.page.labels.tokens is not None:
-            self.after(900, lambda: self.state.page_edit_mode.set('ocr'))
+            self.after(900 * self.delay, lambda: self.state.page_edit_mode.set('ocr'))
 
     # callback that handels change of edit mode
     def on_mode_change(self, *args):
@@ -398,10 +399,10 @@ class PageLevelProcessing(ttk.Frame):
 
             # rotate if rotation label exists
             if self.state.page.labels.rotation != 0:
-                self.after(300, lambda: self.rotate(self.state.page.labels.rotation, set_label = False))
+                self.after(300 * self.delay, lambda: self.rotate(self.state.page.labels.rotation, set_label = False))
             # draw crop bbox if label exists
             if self.state.page.labels.crop_bbox is not None:
-                self.after(600, lambda: self.define_crop_bbox(set_label = False))
+                self.after(600 * self.delay, lambda: self.define_crop_bbox(set_label = False))
 
         # ocr token selection mode
         elif self.state.page_edit_mode.get() == 'ocr':
@@ -432,10 +433,10 @@ class PageLevelProcessing(ttk.Frame):
 
             # load tokens if ocr labels exist
             if self.state.page.labels.tokens is not None:
-                self.after(300, lambda: self.run_ocr(set_label = False))
+                self.after(300 * self.delay, lambda: self.run_ocr(set_label = False))
 
             if self.state.page.labels.key_values is not None:
-                self.after(600, lambda: self.bbox_label_control.extract_text(set_label = False))
+                self.after(600 * self.delay, lambda: self.bbox_label_control.extract_text(set_label = False))
 
         # bbox drawing mode
         elif self.state.page_edit_mode.get() == 'drawing':
