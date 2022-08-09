@@ -1,5 +1,7 @@
+import os
 import tkinter as tk
 import tkinter.ttk as ttk
+from tkinter.filedialog import askdirectory, askopenfilename, asksaveasfilename
 from state import State
 from doc2data.pdf import PDFCollection
 
@@ -14,17 +16,45 @@ class FileControl(ttk.LabelFrame):
         # register callback if new file selected
         self.state.file_selected_idx.trace_add('write', self.on_file_change)
 
+        # loading and saving of pdf_collection
+        frm_io = ttk.Frame(self)
+        btn_create_collection = ttk.Button(
+            master = frm_io,
+            text = 'Create collection',
+            command = self.create_collection
+        )
+        btn_create_collection.pack(side = 'left', padx = 2, pady = 2)
+        btn_load_collection = ttk.Button(
+            master = frm_io,
+            text = 'Load collection',
+            command = self.load_collection
+        )
+        btn_load_collection.pack(side = 'left', padx = 2, pady = 2)
+        btn_save_collection = ttk.Button(
+            master = frm_io,
+            text = 'Save collection',
+            command = self.save_collection
+        )
+        btn_save_collection.pack(side = 'left', padx = 2, pady = 2)
+        frm_io.pack(side = 'top')
+
         # info on PDF collection
         frm_collection_info = ttk.Frame(self)
         lbl_collection_path_key = ttk.Label(frm_collection_info, text = 'Path to collection:')
         lbl_collection_path_key.grid(row = 0, column = 0, padx = 2, pady = 2, sticky = 'w')
-        lbl_collection_path_value = ttk.Label(frm_collection_info, text = self.state.pdf_collection.path_to_files)
-        lbl_collection_path_value.grid(row = 0, column = 1, padx = 2, pady = 2, sticky = 'w')
+        self.lbl_collection_path_value = ttk.Label(frm_collection_info, text = 'Collection not saved.')
+        if hasattr(self.state.pdf_collection, 'path_to_collection'):
+            self.lbl_collection_path_value = ttk.Label(frm_collection_info, text = os.path.basename(self.state.pdf_collection.path_to_collection))
+        self.lbl_collection_path_value.grid(row = 0, column = 1, padx = 2, pady = 2, sticky = 'w')
+        lbl_document_path_key = ttk.Label(frm_collection_info, text = 'Path to documents:')
+        lbl_document_path_key.grid(row = 1, column = 0, padx = 2, pady = 2, sticky = 'w')
+        self.lbl_document_path_value = ttk.Label(frm_collection_info, text = os.path.basename(self.state.pdf_collection.path_to_files))
+        self.lbl_document_path_value.grid(row = 1, column = 1, padx = 2, pady = 2, sticky = 'w')
         lbl_n_files_key = ttk.Label(frm_collection_info, text = 'Number of files:')
-        lbl_n_files_key.grid(row = 1, column = 0, padx = 2, pady = 2, sticky = 'w')
-        lbl_n_files_value = ttk.Label(frm_collection_info, text = self.state.pdf_collection.n_files)
-        lbl_n_files_value.grid(row = 1, column = 1, padx = 2, pady = 2, sticky = 'w')
-        frm_collection_info.pack(side = 'top', anchor = 'w')
+        lbl_n_files_key.grid(row = 2, column = 0, padx = 2, pady = 2, sticky = 'w')
+        self.lbl_n_files_value = ttk.Label(frm_collection_info, text = self.state.pdf_collection.n_files)
+        self.lbl_n_files_value.grid(row = 2, column = 1, padx = 2, pady = 2, sticky = 'w')
+        frm_collection_info.pack(side = 'top')
 
         # file selection
         frm_file_selection = ttk.Frame(self)
@@ -53,7 +83,7 @@ class FileControl(ttk.LabelFrame):
         lbl_file_idx_key.grid(row = 1, column = 0, padx = 2, pady = 2, sticky = 'w')
         self.lbl_file_idx_value = ttk.Label(frm_file_info, text = None)
         self.lbl_file_idx_value.grid(row = 1, column = 1, padx = 2, pady = 2, sticky = 'w')
-        frm_file_info.pack(side = 'top', anchor = 'w')
+        frm_file_info.pack(side = 'top')
 
         # bind events
         self._root().bind('y', lambda event: self.load_previous_file())
@@ -71,7 +101,6 @@ class FileControl(ttk.LabelFrame):
 
             self._root().bind('<Alt_L>', lambda event: self.debug_print_state())
 
-
     def load_next_file(self):
 
         if self.state.file_selected_idx.get() < self.state.pdf_collection.n_files - 1:
@@ -82,13 +111,41 @@ class FileControl(ttk.LabelFrame):
         if self.state.file_selected_idx.get() > 0:
             self.state.file_selected_idx.set(self.state.file_selected_idx.get() - 1)
 
-    def on_file_change(self, *args):        
+    def on_file_change(self, *args):
 
         idx = self.state.file_selected_idx.get()
         n_files = self.state.pdf_collection.n_files
         file_name, file = self.state.indexed_files[idx]
         self.lbl_file_name_value.config(text = file_name)
         self.lbl_file_idx_value.config(text = '%s / %s'%(idx + 1, n_files))
+
+    def create_collection(self):
+
+        path_to_pdfs = askdirectory()
+        pdf_collection = PDFCollection(path_to_files = path_to_pdfs)
+        self.state.reset(pdf_collection, self.state.bbox_label_dict)
+
+        self.lbl_document_path_value.config(text = os.path.basename(path_to_pdfs))
+        self.lbl_n_files_value.config(text = pdf_collection.n_files)
+
+    def load_collection(self):
+
+        path_to_collection = askopenfilename()
+        pdf_collection = PDFCollection.load(path_to_collection)
+        self.state.reset(pdf_collection, self.state.bbox_label_dict)
+
+        self.lbl_document_path_value.config(text = os.path.basename(pdf_collection.path_to_files))
+        self.lbl_collection_path_value.config(text = os.path.basename(pdf_collection.path_to_collection))
+        self.lbl_n_files_value.config(text = pdf_collection.n_files)
+
+    def save_collection(self):
+
+        dir_name = 'saved'
+        os.makedirs(dir_name, exist_ok = True)
+        path_to_collection = asksaveasfilename()
+        self.state.pdf_collection.path_to_collection = path_to_collection
+        self.state.pdf_collection.save(path_to_collection, overwrite = True)
+        self.lbl_collection_path_value.config(text = os.path.basename(path_to_collection))
 
     def reset_pdf_collection(self):
 
@@ -109,13 +166,19 @@ class FileControl(ttk.LabelFrame):
             elif k == 'file_selected_idx' or k == 'page_edit_mode' or k == 'page_bbox_label_idx':
                 print(k, ':', v.get())
             elif k == 'page_token_bboxes':
-                print(k, ':', list(v.items())[0])
+                if v is not None:
+                    print(k, ':', list(v.items())[0])
+                else:
+                    print(k, ':')
             else:
                 print(k, ':', v)
         print('#########################\n# PAGE LABELS\n#########################')
         for k, v in self.state.page.labels.__dict__.items():
             if k == 'tokens':
-                print(k, ':', v[0])
+                if v is not None:
+                    print(k, ':', v[0])
+                else:
+                    print(k, ':')
             else:
                 print(k, ':', v)
         print('#########################')
@@ -130,6 +193,8 @@ class PageControl(ttk.LabelFrame):
 
         self.state = state
         self.page_analysis = page_analysis
+        self.columnconfigure(0, weight = 1)
+        self.columnconfigure(1, weight = 1)
 
         self.frm_mode_control = ttk.Frame(self)
         rbtn_preprocessing_mode = ttk.Radiobutton(
@@ -159,7 +224,7 @@ class PageControl(ttk.LabelFrame):
             width = 15
         )
         rbtn_drawing_mode.pack(side = 'top', anchor = 'w', padx = 2, pady = 2)
-        self.frm_mode_control.pack(side = 'left', anchor = 'w')
+        self.frm_mode_control.grid(row = 0, column = 0, sticky = 'e')
 
         frm_controls = ttk.Frame(self)
         btn_rotate_left = ttk.Button(
@@ -191,5 +256,5 @@ class PageControl(ttk.LabelFrame):
             text = 'Reset',
             command = self.page_analysis.reset
         )
-        btn_reload.grid(column = 0, row = 2, columnspan = 2, padx = 2, pady = 2)
-        frm_controls.pack(side = 'left', anchor = 'n')
+        btn_reload.grid(row = 2, column = 0, columnspan = 2, padx = 2, pady = 2)
+        frm_controls.grid(row = 0, column = 1, sticky = 'w')

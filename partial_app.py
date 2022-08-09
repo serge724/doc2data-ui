@@ -85,14 +85,38 @@ class BboxLabelControl(ttk.LabelFrame):
         frm_labeling_control.pack(side = 'top')
 
         frm_bbox_labeling = ttk.Frame(self)
-        self.state.page_bbox_text_entry = {}
-        for k, v in self.state.pdf_collection.bbox_label_dict.items():
-            lbl_label_key = ttk.Label(frm_bbox_labeling, text = '%s: %s'%(k, v))
-            lbl_label_key.grid(column = 0, row = k, sticky = 'w')
-            bbox_text = tk.StringVar()
-            # ent_bbox_text = ttk.Entry(frm_bbox_labeling, textvariable = bbox_text, font = 'default 16').grid(column = 1, row = k, sticky = 'w')
-            ent_bbox_text = ttk.Entry(frm_bbox_labeling, textvariable = bbox_text).grid(column = 1, row = k, sticky = 'w')
-            self.state.page_bbox_text_entry[k] = {'lbl_widget': lbl_label_key, 'string_var': bbox_text}
+        if False:
+            self.state.page_bbox_text_entry = {}
+            for k, v in self.state.pdf_collection.bbox_label_dict.items():
+                lbl_label_key = ttk.Label(frm_bbox_labeling, text = '%s: %s'%(k, v))
+                lbl_label_key.grid(column = 0, row = k, sticky = 'w')
+                bbox_text = tk.StringVar()
+                ent_bbox_text = ttk.Entry(frm_bbox_labeling, textvariable = bbox_text)
+                ent_bbox_text.grid(column = 1, row = k, sticky = 'w')
+                self.state.page_bbox_text_entry[k] = {'lbl_widget': lbl_label_key, 'string_var': bbox_text}
+        else:
+            self.state.page_bbox_text_entry = {}
+            row = 0
+            for k, v in self.state.pdf_collection.bbox_label_dict.items():
+                if 'key' in v:
+                    key_name = v.split('_')[0]
+                    lbl_label_key_name = ttk.Label(frm_bbox_labeling, text = '%s:'%key_name)
+                    lbl_label_key_name.grid(column = 0, row = row, sticky = 'w')
+                    lbl_label_key_idx = ttk.Label(frm_bbox_labeling, text = k)
+                    lbl_label_key_idx.grid(column = 1, row = row, sticky = 'e')
+                    bbox_text = tk.StringVar()
+                    ent_bbox_text = ttk.Entry(frm_bbox_labeling, textvariable = bbox_text)
+                    ent_bbox_text.grid(column = 2, row = row, sticky = 'w')
+                    self.state.page_bbox_text_entry[k] = {'lbl_widget': lbl_label_key_idx, 'string_var': bbox_text}
+                if 'value' in v:
+                    lbl_label_value_idx = ttk.Label(frm_bbox_labeling, text = k)
+                    lbl_label_value_idx.grid(column = 3, row = row, sticky = 'e')
+                    bbox_text = tk.StringVar()
+                    ent_bbox_text = ttk.Entry(frm_bbox_labeling, textvariable = bbox_text)
+                    ent_bbox_text.grid(column = 4, row = row, sticky = 'w')
+                    self.state.page_bbox_text_entry[k] = {'lbl_widget': lbl_label_value_idx, 'string_var': bbox_text}
+                    row += 1
+
         frm_bbox_labeling.pack(side = 'top', pady = 20)
 
         btn_update_key_text = ttk.Button(
@@ -137,7 +161,10 @@ class BboxLabelControl(ttk.LabelFrame):
     def clear_ent_widgets(self):
 
         for k, v in self.state.page_bbox_text_entry.items():
-            v['lbl_widget'].config(background = '')
+            if k == 0:
+                v['lbl_widget'].config(background = 'white')
+            else:
+                v['lbl_widget'].config(background = '')
             v['string_var'].set('')
 
     def extract_text(self, set_label = True):
@@ -210,9 +237,10 @@ class PageLevelProcessing(ttk.Frame):
 
         if not hasattr(self.state.page, 'labels'):
             self.state.page.labels = PageLabels(0, None, None, None)
-        self.processed_image = self.state.page.read_content('image', dpi = 100, force_rgb = True)
+        self.processed_image = self.state.page.read_contents('page_image', dpi = 100, force_rgb = True)
         self.state.page_is_cropped = False
         self.update_canvas()
+
         print('page loaded')
 
     # rotates page
@@ -256,6 +284,7 @@ class PageLevelProcessing(ttk.Frame):
             print('ocr tokens loaded')
         else:
             if self.state.page.labels.tokens is None:
+                self.state.page_edit_mode.set('ocr')
                 ocr_tokens = run_doctr_ocr(self.processed_image)
                 ocr_tokens_dict = {k: v for k, v in enumerate(ocr_tokens)}
                 self.state.page.labels.tokens = ocr_tokens_dict
@@ -287,6 +316,8 @@ class PageLevelProcessing(ttk.Frame):
         self.state.page_edit_mode.set('preprocessing')
         self.state.page_bbox_label_idx.set(0)
         if self.state.page.labels.crop_bbox is not None:
+            self.after(900, lambda: self.state.page_edit_mode.set('ocr'))
+        if self.state.page.labels.tokens is not None:
             self.after(900, lambda: self.state.page_edit_mode.set('ocr'))
 
     # callback that handels change of edit mode
@@ -324,6 +355,13 @@ class PageLevelProcessing(ttk.Frame):
                 self.state.page_is_cropped = True
                 crop_bbox.destroy()
                 self.update_canvas()
+            else:
+                w, h = self.processed_image.size
+                canvas_frame_width = self.canvas.winfo_width()
+                canvas_frame_height = self.canvas.winfo_height()
+                zoom = min((canvas_frame_width / w, canvas_frame_height / h))
+                self.processed_image = self.processed_image.resize((int(w*zoom), int(h*zoom)))
+                self.update_canvas()
 
             # load tokens if ocr labels exist
             if self.state.page.labels.tokens is not None:
@@ -340,8 +378,16 @@ class PageLevelProcessing(ttk.Frame):
     def reset(self):
         file_name, file = self.state.indexed_files[self.state.file_selected_idx.get()]
         self.state.page = file.processed_pages[0]
+
+        # ...
         self.state.page.labels = PageLabels(0, None, None, None)
+
+        # reset bbox_label_control
+        self.bbox_label_control.clear_ent_widgets()
+
+        # set state of the app according to available labels
         self.state.page_edit_mode.set('preprocessing')
+        self.state.page_bbox_label_idx.set(0)
 
     # ...
     def save_bounding_box(self):
@@ -381,15 +427,26 @@ class PageLevelProcessing(ttk.Frame):
 # start application
 if __name__ == '__main__':
 
-    bbox_label_dict = {
-        0: 'Kennzeichen',
-        1: 'Name',
-        2: 'Vorname',
-        3: 'Erstzulassung',
-        4: 'Fahrzeugklasse',
-        5: 'Handelsbez.',
-        6: 'Herst.-Kurzbez.'
-    }
+    import argparse
+    import tomli
+
+    parser = argparse.ArgumentParser(description = 'Select configuration TOML.')
+    parser.add_argument('--config', help = 'path of the TOML configuration file', default = 'config.toml')
+    args = parser.parse_args()
+
+    with open(args.config, 'rb') as file:
+        config = tomli.load(file)
+    bbox_label_dict = config['bbox_labels']
+    if config['only_values']:
+        for k in list(bbox_label_dict.keys()):
+            bbox_label_dict[int(k)] = bbox_label_dict.pop(k)
+    else:
+        shift = 0
+        for k in list(bbox_label_dict.keys()):
+            v = bbox_label_dict.pop(k)
+            bbox_label_dict[int(k)+shift] = v + '_key'
+            bbox_label_dict[int(k)+shift+1] = v + '_value'
+            shift += 1
 
     app = App(bbox_label_dict)
     app.run()

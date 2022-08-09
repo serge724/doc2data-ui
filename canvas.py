@@ -43,7 +43,7 @@ class BoundingBox:
             self.end_x,
             self.end_y,
             fill = 'yellow',
-            stipple = 'gray25'
+            stipple = 'gray12'
         )
 
     def draw_rectangle(self, bbox_coords, activefill = None):
@@ -57,7 +57,7 @@ class BoundingBox:
             self.end_y,
             fill = 'red',
             activefill = 'magenta',
-            stipple = 'gray25'
+            stipple = 'gray12'
         )
 
     def on_click(self):

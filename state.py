@@ -27,6 +27,27 @@ class State:
         self.page_token_bboxes = None
         self.page_bbox_text_entry = None
 
+    def reset(self, pdf_collection, bbox_label_dict):
+
+        # connect data source
+        self.pdf_collection = pdf_collection
+        if not hasattr(pdf_collection, 'overview'):
+            self.pdf_collection.process_files()
+        self.indexed_files = {i: (k, v) for i, (k, v) in enumerate(self.pdf_collection.pdfs.items())}
+
+        # add label types
+        self.bbox_label_dict = bbox_label_dict
+        self.pdf_collection.bbox_label_dict = bbox_label_dict
+
+        # define file-level states
+        self.file_selected_idx.set(0)
+
+        # define page-level states
+        self.page_crop_bbox = None
+        self.page_drawn_bbox = None
+        self.page_token_bboxes = None
+
+
 # class for page labels
 class PageLabels:
 
