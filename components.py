@@ -414,8 +414,8 @@ class PageLevelProcessing(ttk.Frame):
                 # zoom if cropped image is small
                 w, h = self.processed_image.size
                 if w < 500 or h < 500:
-                    canvas_frame_width = self.canvas.winfo_width()
-                    canvas_frame_height = self.canvas.winfo_height()
+                    canvas_frame_width = self.canvas.frm_container.winfo_width()
+                    canvas_frame_height = self.canvas.frm_container.winfo_height()
                     zoom = min((canvas_frame_width / w, canvas_frame_height / h))
                     self.processed_image = self.processed_image.resize((int(w*zoom), int(h*zoom)))
                 # update state
