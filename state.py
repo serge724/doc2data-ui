@@ -6,8 +6,8 @@ class State:
     def __init__(self, master, pdf_collection, bbox_label_dict):
 
         # connect data source
-        self.pdf_collection = pdf_collection
-        if not hasattr(pdf_collection, 'overview'):
+        self.pdf_collection = pdf_collection        
+        if pdf_collection.overview is None:
             self.pdf_collection.process_files()
         self.indexed_files = {i: (k, v) for i, (k, v) in enumerate(self.pdf_collection.pdfs.items())}
 
@@ -31,7 +31,7 @@ class State:
 
         # connect data source
         self.pdf_collection = pdf_collection
-        if not hasattr(pdf_collection, 'overview'):
+        if pdf_collection.overview is None:
             self.pdf_collection.process_files()
         self.indexed_files = {i: (k, v) for i, (k, v) in enumerate(self.pdf_collection.pdfs.items())}
 

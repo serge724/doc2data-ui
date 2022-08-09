@@ -25,7 +25,6 @@ class BoundingBox:
         self.image_height = self.canvas.tk_image.height()
         self.font = Font(size = 15, weight = 'bold')
 
-
     def add_start_corner(self, x, y):
 
         self.start_x = x
