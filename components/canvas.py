@@ -4,8 +4,6 @@ from doc2data.utils import normalize_bbox, denormalize_bbox
 from tkinter.font import Font
 from PIL import ImageTk
 
-# TODO: add states for bounding box class?
-
 # ...
 class BoundingBox:
 
@@ -184,7 +182,7 @@ class PageCanvas(ScrollableCanvas):
         self.configure(
             width = min(self.tk_image.width(), self.master.winfo_width()-30),
             height = min(self.tk_image.height(), self.master.winfo_height())
-        )        
+        )
 
     def on_motion(self, event):
         pass
@@ -250,50 +248,3 @@ class PageCanvas(ScrollableCanvas):
 
         self.state.page_crop_bbox = BoundingBox(self, 'crop_bbox')
         self.state.page_crop_bbox.draw_rectangle(bbox_coords)
-
-
-if __name__ == '__main__':
-
-    # ...
-    from state import State
-    from doc2data.pdf import PDFCollection
-
-    class App:
-
-        def __init__(self):
-
-            # set up window
-            self.root = tk.Tk()
-            w, h = self.root.winfo_screenwidth(), self.root.winfo_screenheight()
-            self.root.geometry("%dx%d+0+0" % (w, h))
-
-            # initiate internal state
-            self.state = State(self.root, PDFCollection('example_docs'), bbox_label_dict = None)
-
-            # create test image
-            page = list(self.state.pdf_collection.pdfs.values())[0][0]
-            image = page.read_content('image', dpi = 200, force_rgb = True)
-
-            if True:
-
-                # define & place UI elements
-                canvas = PageCanvas(self.root, self.state, bg = 'gray')
-                canvas.frm_container.pack(fill = 'both', expand = True, side = 'left')
-
-                canvas.create_image(image)
-
-            else:
-                # scrollable canvas
-                canvas = ScrollableCanvas(self.root, self.state, bg = 'gray')
-                canvas.frm_container.pack(fill = 'both', expand = True, side = 'left')
-                print('test')
-                tk_image = ImageTk.PhotoImage(image)
-                canvas.create_image(0, 0, image=tk_image)
-                canvas.tk_image = tk_image # due to bug (https://blog.furas.pl/python-tkinter-how-to-load-display-and-replace-image-on-label-button-or-canvas-gb.html)
-
-
-        def run(self):
-            self.root.mainloop()
-
-    app = App()
-    app.run()
