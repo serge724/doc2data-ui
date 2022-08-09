@@ -307,6 +307,13 @@ class PageLevelProcessing(ttk.Frame):
             self.state.page.labels = PageLabels(0, None, None, None)
         self.processed_image = self.state.page.read_contents('page_image', dpi = 100, force_rgb = True)
         self.state.page_is_cropped = False
+
+        w, h = self.processed_image.size
+        canvas_frame_width = self.canvas.frm_container.winfo_width()
+        canvas_frame_height = self.canvas.frm_container.winfo_height()
+        zoom = min((canvas_frame_width / w, canvas_frame_height / h))
+        self.processed_image = self.processed_image.resize((int(w*zoom), int(h*zoom)))
+
         self.update_canvas()
 
         print('page loaded')
@@ -413,12 +420,11 @@ class PageLevelProcessing(ttk.Frame):
                 coords = list([crop_bbox.start_x, crop_bbox.start_y, crop_bbox.end_x, crop_bbox.end_y])
                 self.processed_image = self.processed_image.crop(coords)
                 # zoom if cropped image is small
-                w, h = self.processed_image.size
-                if w < 500 or h < 500:
-                    canvas_frame_width = self.canvas.frm_container.winfo_width()
-                    canvas_frame_height = self.canvas.frm_container.winfo_height()
-                    zoom = min((canvas_frame_width / w, canvas_frame_height / h))
-                    self.processed_image = self.processed_image.resize((int(w*zoom), int(h*zoom)))
+                w, h = self.processed_image.size                
+                canvas_frame_width = self.canvas.frm_container.winfo_width()
+                canvas_frame_height = self.canvas.frm_container.winfo_height()
+                zoom = min((canvas_frame_width / w, canvas_frame_height / h))
+                self.processed_image = self.processed_image.resize((int(w*zoom), int(h*zoom)))
                 # update state
                 self.state.page_is_cropped = True
                 crop_bbox.destroy()
