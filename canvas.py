@@ -181,7 +181,12 @@ class PageCanvas(ScrollableCanvas):
 
     def adjust_size(self):
         self.master.update()
-        self.configure(width=min(self.tk_image.width(), self.master.winfo_width()-30), height=min(self.tk_image.height(), self.master.winfo_height()))
+        print('height: self | tk_image | master', self.winfo_height(), self.tk_image.height(), self.master.winfo_height())
+        self.configure(
+            width = min(self.tk_image.width(), self.master.winfo_width()-30),
+            height = min(self.tk_image.height(), self.master.winfo_height())
+        )
+        print('height: self | tk_image | master', self.winfo_height(), self.tk_image.height(), self.master.winfo_height())
 
     def on_motion(self, event):
         pass
