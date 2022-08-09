@@ -21,10 +21,3 @@ def run_doctr_ocr(image):
                 })
                 c += 1
     return tokens
-
-# from doc2data.pdf import PDFCollection
-# coll = PDFCollection('example_docs/')
-# coll.process_files()
-# page = coll.pdfs['262192.pdf'][0]
-# image = page.read_content('image', dpi = 100, force_rgb = True)
-# res = run_doctr_ocr(image)
