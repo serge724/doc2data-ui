@@ -2,7 +2,7 @@ import os
 import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter.filedialog import askdirectory, askopenfilename, asksaveasfilename
-form datetime import datetime
+from datetime import datetime
 from components.state import State, PageLabels
 from components.canvas import PageCanvas, BoundingBox
 from components.ocr import run_doctr_ocr
@@ -154,7 +154,7 @@ class FileControl(ttk.LabelFrame):
     def reset_pdf_collection(self):
 
         pdf_collection = PDFCollection(self.state.pdf_collection.path_to_files)
-        pdf_collection.save('db/pdf_collection.pickle', overwrite = True)
+        pdf_collection.save('tmp/last_collection.pickle', overwrite = True)
         self._root().destroy()
 
     def debug_print_state(self):
@@ -379,7 +379,7 @@ class PageLevelProcessing(ttk.Frame):
 
         # save current file index and label data if new file is selected
         self.state.pdf_collection.file_selected_idx = self.state.file_selected_idx.get()
-        self.state.pdf_collection.save('db/pdf_collection.pickle', overwrite = True)
+        self.state.pdf_collection.save('tmp/last_collection.pickle', overwrite = True)
 
         # select new file and page
         file_name, file = self.state.indexed_files[self.state.file_selected_idx.get()]
@@ -421,7 +421,7 @@ class PageLevelProcessing(ttk.Frame):
                 coords = list([crop_bbox.start_x, crop_bbox.start_y, crop_bbox.end_x, crop_bbox.end_y])
                 self.processed_image = self.processed_image.crop(coords)
                 # zoom if cropped image is small
-                w, h = self.processed_image.size                
+                w, h = self.processed_image.size
                 canvas_frame_width = self.canvas.frm_container.winfo_width()
                 canvas_frame_height = self.canvas.frm_container.winfo_height()
                 zoom = min((canvas_frame_width / w, canvas_frame_height / h))
