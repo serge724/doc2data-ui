@@ -3,6 +3,8 @@ from doc2data.pdf import PDFCollection
 from components.state import State
 from components.controls import FileControl, PageControl, PageLevelProcessing
 
+import sv_ttk
+
 # define main app class
 class App:
 
@@ -25,6 +27,7 @@ class App:
         self.root = tk.Tk()
         w, h = self.root.winfo_screenwidth(), self.root.winfo_screenheight()
         self.root.geometry("%dx%d+3440+0"%(1920, 1080))
+        sv_ttk.set_theme("light")
 
         # initiate internal state
         self.state = State(self.root, pdf_collection, bbox_label_dict)
