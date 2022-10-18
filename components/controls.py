@@ -56,7 +56,7 @@ class FileControl(ttk.LabelFrame):
         self.lbl_document_path_value.grid(row = 1, column = 1, padx = 2, pady = 2, sticky = 'w')
         lbl_n_pdfs_key = ttk.Label(frm_collection_info, text = 'Number of files:')
         lbl_n_pdfs_key.grid(row = 2, column = 0, padx = 2, pady = 2, sticky = 'w')
-        self.lbl_n_pdfs_value = ttk.Label(frm_collection_info, text = self.state.pdf_collection.n_pdfs)
+        self.lbl_n_pdfs_value = ttk.Label(frm_collection_info, text = len(self.state.pdf_collection.pdfs))
         self.lbl_n_pdfs_value.grid(row = 2, column = 1, padx = 2, pady = 2, sticky = 'w')
         frm_collection_info.pack(side = 'top')
 
@@ -107,7 +107,7 @@ class FileControl(ttk.LabelFrame):
 
     def load_next_file(self):
 
-        if self.state.file_selected_idx.get() < self.state.pdf_collection.n_pdfs - 1:
+        if self.state.file_selected_idx.get() < len(self.state.pdf_collection.pdfs) - 1:
             self.state.file_selected_idx.set(self.state.file_selected_idx.get() + 1)
 
     def load_previous_file(self):
@@ -118,7 +118,7 @@ class FileControl(ttk.LabelFrame):
     def on_file_change(self, *args):
 
         idx = self.state.file_selected_idx.get()
-        n_pdfs = self.state.pdf_collection.n_pdfs
+        n_pdfs = len(self.state.pdf_collection.pdfs)
         file_name, file = self.state.indexed_files[idx]
         self.lbl_file_name_value.config(text = file_name)
         self.lbl_file_idx_value.config(text = '%s / %s'%(idx + 1, n_pdfs))
@@ -130,7 +130,7 @@ class FileControl(ttk.LabelFrame):
         self.state.reset(pdf_collection, self.state.bbox_label_dict)
 
         self.lbl_document_path_value.config(text = os.path.basename(path_to_pdfs))
-        self.lbl_n_pdfs_value.config(text = pdf_collection.n_pdfs)
+        self.lbl_n_pdfs_value.config(text = len(pdf_collection.pdfs))
 
     def load_collection(self):
 
@@ -140,7 +140,7 @@ class FileControl(ttk.LabelFrame):
 
         self.lbl_document_path_value.config(text = os.path.basename(pdf_collection.path_to_files))
         self.lbl_collection_path_value.config(text = os.path.basename(pdf_collection.path_to_collection))
-        self.lbl_n_pdfs_value.config(text = pdf_collection.n_pdfs)
+        self.lbl_n_pdfs_value.config(text = len(pdf_collection.pdfs))
 
     def save_collection(self):
 
@@ -383,7 +383,7 @@ class PageLevelProcessing(ttk.Frame):
 
         # select new file and page
         file_name, file = self.state.indexed_files[self.state.file_selected_idx.get()]
-        self.state.page = file.processed_pages[0]
+        self.state.page = file.parsed_pages[0]
 
         # reset bbox_label_control
         self.bbox_label_control.clear_ent_widgets()
@@ -452,7 +452,7 @@ class PageLevelProcessing(ttk.Frame):
     # resets all page labels
     def reset(self):
         file_name, file = self.state.indexed_files[self.state.file_selected_idx.get()]
-        self.state.page = file.processed_pages[0]
+        self.state.page = file.parsed_pages[0]
 
         # ...
         self.state.page.labels = PageLabels(0, None, None, None)
