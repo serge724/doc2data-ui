@@ -34,7 +34,7 @@ class App:
 
         # define UI elements
         file_control = FileControl(self.root, self.state, relief = 'groove', borderwidth = 3)
-        page_processing = PageLevelProcessing(self.root, self.state, config['only_values'])
+        page_processing = PageLevelProcessing(self.root, self.state, file_control, config['only_values'])
 
         # place UI elements
         page_processing.canvas.frm_container.pack(side = 'left', anchor = 'n', fill = 'both', expand = True, padx = 10, pady = 10)

@@ -51,8 +51,9 @@ class State:
 # class for page labels
 class PageLabels:
 
-    def __init__(self, rotation, crop_bbox, tokens, key_values):
+    def __init__(self, rotation, crop_bbox, tokens, key_values, confirmed):
         self.rotation = rotation
         self.crop_bbox = crop_bbox
         self.tokens = tokens
         self.key_values = key_values
+        self.confirmed = confirmed

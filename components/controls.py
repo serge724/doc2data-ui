@@ -69,12 +69,12 @@ class FileControl(ttk.LabelFrame):
             command = self.load_previous_file
         )
         btn_previous_file.pack(side = 'left', padx = 2, pady = 2)
-        btn_next_file = ttk.Button(
+        self.btn_next_file = ttk.Button(
             master = frm_file_selection,
             text = 'Next file',
             command = self.load_next_file
         )
-        btn_next_file.pack(side = 'left', padx = 2, pady = 2)
+        self.btn_next_file.pack(side = 'left', padx = 2, pady = 2)
         frm_file_selection.pack(side = 'top')
 
         # file info
@@ -109,6 +109,9 @@ class FileControl(ttk.LabelFrame):
 
         if self.state.file_selected_idx.get() < len(self.state.pdf_collection.pdfs) - 1:
             self.state.file_selected_idx.set(self.state.file_selected_idx.get() + 1)
+
+        if not self.state.page.labels.confirmed:
+            self.btn_next_file['state'] = 'disabled'
 
     def load_previous_file(self):
 
@@ -267,7 +270,7 @@ class PageControl(ttk.LabelFrame):
 # ...
 class PageLevelProcessing(ttk.Frame):
 
-    def __init__(self, master, state, only_values, *args, **kwargs):
+    def __init__(self, master, state, file_control, only_values, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # attach state and callbacks
@@ -279,7 +282,7 @@ class PageLevelProcessing(ttk.Frame):
         # define ui components
         self.canvas = PageCanvas(master, state, bg = 'gray')
         self.control = PageControl(master, state, self, relief = 'groove', borderwidth = 3)
-        self.bbox_label_control = BboxLabelControl(master, state, self, only_values, relief = 'groove', borderwidth = 3)
+        self.bbox_label_control = BboxLabelControl(master, state, self, file_control, only_values, relief = 'groove', borderwidth = 3)
 
         # initiate variable attributes
         self.processed_image = None
@@ -305,7 +308,7 @@ class PageLevelProcessing(ttk.Frame):
     def load_page(self):
 
         if not hasattr(self.state.page, 'labels'):
-            self.state.page.labels = PageLabels(0, None, None, None)
+            self.state.page.labels = PageLabels(0, None, None, None, False)
         self.processed_image = self.state.page.read_contents('page_image', dpi = 100, force_rgb = True)
         self.state.page_is_cropped = False
 
@@ -455,7 +458,7 @@ class PageLevelProcessing(ttk.Frame):
         self.state.page = file.parsed_pages[0]
 
         # ...
-        self.state.page.labels = PageLabels(0, None, None, None)
+        self.state.page.labels = PageLabels(0, None, None, None, False)
 
         # reset bbox_label_control
         self.bbox_label_control.clear_ent_widgets()
@@ -501,12 +504,13 @@ class PageLevelProcessing(ttk.Frame):
 
 class BboxLabelControl(ttk.LabelFrame):
 
-    def __init__(self, master, state, page_analysis, only_values, *args, **kwargs):
+    def __init__(self, master, state, page_analysis, file_control, only_values, *args, **kwargs):
         super().__init__(master, text = 'Labeling', *args, **kwargs)
 
         # attach state and link parent component
         self.state = state
         self.page_analysis = page_analysis
+        self.file_control = file_control
 
         self.style = ttk.Style(self)
         self.style.configure('TButton', width = 15)
@@ -576,7 +580,7 @@ class BboxLabelControl(ttk.LabelFrame):
 
         btn_update_key_text = ttk.Button(
             master = self,
-            text = 'Update value text',
+            text = 'Save result',
             command = self.update_key_text
         )
         btn_update_key_text.pack(side = 'top', padx = 2, pady = 2)
@@ -585,12 +589,11 @@ class BboxLabelControl(ttk.LabelFrame):
         self._root().bind('e', lambda event: self.extract_text())
 
     # switch between labels in bbox_label_dict
-    def switch_label(self, direction):        
+    def switch_label(self, direction):
 
         idx = self.state.page_bbox_label_idx.get()
 
         self.state.page_bbox_text_entry[idx]['lbl_widget'].config(background = 'white')
-        print(self.state.page_bbox_text_entry[idx]['lbl_widget'].cget('background'))
 
         if direction == 'next':
             if idx < len(self.state.pdf_collection.bbox_label_dict)-1:
@@ -609,7 +612,6 @@ class BboxLabelControl(ttk.LabelFrame):
 
         for k, v in self.state.page_bbox_text_entry.items():
             v['string_var'].set(self.state.page.labels.key_values[k])
-            print(v['string_var'].get())
 
         self._root().focus()
 
@@ -638,14 +640,24 @@ class BboxLabelControl(ttk.LabelFrame):
             for k, v in self.label_bbox_id_dict.items():
                 joined_tokens = ' '.join([self.state.page.labels.tokens[i]['word'] for i in v])
                 self.state.page.labels.key_values[k] = joined_tokens
-                print(joined_tokens)
 
         self.populate_ent_widgets()
 
     def update_key_text(self):
 
         if hasattr(self, 'label_bbox_id_dict'):
-            for k, v in self.state.page_bbox_text_entry.items():
-                if self.label_bbox_id_dict[k] != []:
+            if isinstance(self.state.page.labels.key_values, dict):
+                for k, v in self.state.page_bbox_text_entry.items():                    
+                    # if self.label_bbox_id_dict[k] != []:
                     self.state.page.labels.key_values[k] = v['string_var'].get()
-            self.populate_ent_widgets()
+                    print(v['string_var'].get())
+                self.populate_ent_widgets()
+            # write results to json
+            import json
+            with open('file.json', 'wt') as file:
+                print(self.state.page.labels.key_values)
+                json.dump(self.state.page.labels.key_values, file)
+
+
+        self.state.page.labels.confirmed = True
+        self.file_control.btn_next_file['state'] = 'normal'
