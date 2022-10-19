@@ -543,7 +543,7 @@ class BboxLabelControl(ttk.LabelFrame):
         if only_values:
             self.state.page_bbox_text_entry = {}
             for k, v in self.state.pdf_collection.bbox_label_dict.items():
-                lbl_label_key = ttk.Label(frm_bbox_labeling, text = '%s: %s'%(k, v))
+                lbl_label_key = tk.Label(frm_bbox_labeling, text = '%s: %s'%(k, v))
                 lbl_label_key.grid(column = 0, row = k, sticky = 'w')
                 bbox_text = tk.StringVar()
                 ent_bbox_text = ttk.Entry(frm_bbox_labeling, textvariable = bbox_text)
@@ -585,11 +585,11 @@ class BboxLabelControl(ttk.LabelFrame):
         self._root().bind('e', lambda event: self.extract_text())
 
     # switch between labels in bbox_label_dict
-    def switch_label(self, direction):
+    def switch_label(self, direction):        
 
         idx = self.state.page_bbox_label_idx.get()
 
-        self.state.page_bbox_text_entry[idx]['lbl_widget'].config(background = '')
+        self.state.page_bbox_text_entry[idx]['lbl_widget'].config(background = 'white')
         print(self.state.page_bbox_text_entry[idx]['lbl_widget'].cget('background'))
 
         if direction == 'next':
@@ -603,7 +603,7 @@ class BboxLabelControl(ttk.LabelFrame):
             else:
                 self.state.page_bbox_label_idx.set(len(self.state.pdf_collection.bbox_label_dict)-1)
 
-        self.state.page_bbox_text_entry[self.state.page_bbox_label_idx.get()]['lbl_widget'].config(background = 'white')
+        self.state.page_bbox_text_entry[self.state.page_bbox_label_idx.get()]['lbl_widget'].config(background = 'red')
 
     def populate_ent_widgets(self):
 
@@ -617,9 +617,9 @@ class BboxLabelControl(ttk.LabelFrame):
 
         for k, v in self.state.page_bbox_text_entry.items():
             if k == 0:
-                v['lbl_widget'].config(background = 'white')
+                v['lbl_widget'].config(background = 'red')
             else:
-                v['lbl_widget'].config(background = '')
+                v['lbl_widget'].config(background = 'white')
             v['string_var'].set('')
 
     def extract_text(self, set_label = True):
