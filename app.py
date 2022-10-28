@@ -1,4 +1,5 @@
 import tkinter as tk
+import tkinter.font as tkf
 from doc2data.pdf import PDFCollection
 from components.state import State
 from components.controls import FileControl, PageControl, PageLevelProcessing
@@ -7,6 +8,11 @@ from components.controls import FileControl, PageControl, PageLevelProcessing
 class App:
 
     def __init__(self, pdf_collection, config):
+
+        # set up window
+        self.root = tk.Tk()
+        w, h = self.root.winfo_screenwidth(), self.root.winfo_screenheight()
+        self.root.geometry("%dx%d+3440+0"%(1920, 1080))
 
         # process config
         bbox_label_dict = config['bbox_labels']
@@ -20,14 +26,17 @@ class App:
                 bbox_label_dict[int(k)+shift] = v + '_key'
                 bbox_label_dict[int(k)+shift+1] = v + '_value'
                 shift += 1
-
-        # set up window
-        self.root = tk.Tk()
-        w, h = self.root.winfo_screenwidth(), self.root.winfo_screenheight()
-        self.root.geometry("%dx%d+3440+0"%(1920, 1080))
         if config['sv_theme']:
             import sv_ttk
             sv_ttk.set_theme("light")
+        if config['font_size'] != 'default':
+            default_font = tkf.nametofont('TkDefaultFont')
+            default_font.configure(size = config['font_size'])
+            # text_font = tkf.nametofont('TkTextFont')
+            # text_font.configure(size=16)
+
+
+
 
         # initiate internal state
         self.state = State(self.root, pdf_collection, bbox_label_dict)
