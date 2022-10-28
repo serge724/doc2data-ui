@@ -177,6 +177,7 @@ class FileControl(ttk.LabelFrame):
         path = self.state.pdf_collection.path_to_files
         files = os.listdir(path)
         for i in files: os.remove(os.path.join(path, i))
+        os.remove('tmp/last_collection.pickle')        
         self._root().destroy()
 
     def debug_print_state(self):
