@@ -79,7 +79,7 @@ if __name__ == '__main__':
     if os.path.exists('tmp/last_collection.pickle'):
         pdf_collection = PDFCollection.load('tmp/last_collection.pickle')
     else:
-        pdf_collection = PDFCollection('example_docs/')
+        pdf_collection = PDFCollection(config['default_folder'])
 
     app = App(pdf_collection, config)
     app.run()
