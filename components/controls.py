@@ -2,6 +2,7 @@ import os
 import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter.filedialog import askdirectory, askopenfilename, asksaveasfilename
+from tkinter.simpledialog import SimpleDialog
 from datetime import datetime
 from components.state import State, PageLabels
 from components.canvas import PageCanvas, BoundingBox
@@ -177,7 +178,7 @@ class FileControl(ttk.LabelFrame):
         path = self.state.pdf_collection.path_to_files
         files = os.listdir(path)
         for i in files: os.remove(os.path.join(path, i))
-        os.remove('tmp/last_collection.pickle')        
+        os.remove('tmp/last_collection.pickle')
         self._root().destroy()
 
     def debug_print_state(self):
@@ -665,30 +666,41 @@ class BboxLabelControl(ttk.LabelFrame):
 
     def update_key_text(self):
 
-        if hasattr(self, 'label_bbox_id_dict'):
-            if isinstance(self.state.page.labels.key_values, dict):
-                for k, v in self.state.page_bbox_text_entry.items():
-                    # if self.label_bbox_id_dict[k] != []:
-                    self.state.page.labels.key_values[k] = v['string_var'].get()
-                    print(v['string_var'].get())
-                self.populate_ent_widgets()
-            # write results to json
-            import json
-            with open('file.json', 'wt') as file:
-                json_result = self.state.page.labels.key_values
-                idx = self.state.file_selected_idx.get()
-                file_name, _ = self.state.indexed_files[idx]
-                json_result['file_name'] = file_name
-                print(json_result)
-                json.dump(json_result, file)
+        dialog = SimpleDialog(
+            self._root(),
+            text="Please confirm your entry.",
+            buttons=["Confirm", "Cancel"],
+            default=0,
+            cancel=1,
+            title="Confirmation"
+        )
+
+        if dialog.go() == 0:
+
+            if hasattr(self, 'label_bbox_id_dict'):
+                if isinstance(self.state.page.labels.key_values, dict):
+                    for k, v in self.state.page_bbox_text_entry.items():
+                        # if self.label_bbox_id_dict[k] != []:
+                        self.state.page.labels.key_values[k] = v['string_var'].get()
+                        print(v['string_var'].get())
+                    self.populate_ent_widgets()
+                # write results to json
+                import json
+                with open('file.json', 'wt') as file:
+                    json_result = self.state.page.labels.key_values
+                    idx = self.state.file_selected_idx.get()
+                    file_name, _ = self.state.indexed_files[idx]
+                    json_result['file_name'] = file_name
+                    print(json_result)
+                    json.dump(json_result, file)
 
 
-        self.state.page.labels.confirmed = True
-        self.file_control.btn_next_file['state'] = 'normal'
-        self._root().bind('x', lambda event: self.file_control.load_next_file())
+            self.state.page.labels.confirmed = True
+            self.file_control.btn_next_file['state'] = 'normal'
+            self._root().bind('x', lambda event: self.file_control.load_next_file())
 
-        # check if btn_next_file should be enabled
-        idx = self.state.file_selected_idx.get()
-        n_pdfs = len(self.state.pdf_collection.pdfs)
-        if (idx + 1) == n_pdfs:
-            self.file_control.btn_finish_session['state'] = 'normal'
+            # check if btn_next_file should be enabled
+            idx = self.state.file_selected_idx.get()
+            n_pdfs = len(self.state.pdf_collection.pdfs)
+            if (idx + 1) == n_pdfs:
+                self.file_control.btn_finish_session['state'] = 'normal'
