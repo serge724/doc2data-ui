@@ -137,7 +137,7 @@ class ScrollableCanvas(tk.Canvas):
     def __init__(self, master, *args, **kwargs):
 
         # create & configure form that contains canvas & scrollbars
-        self.frm_container = ttk.Frame(master = master)
+        self.frm_container = tk.Frame(master = master, background = 'lightgray')
         self.frm_container.columnconfigure(0, weight = 1)
         self.frm_container.rowconfigure(0, weight = 1)
 

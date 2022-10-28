@@ -110,9 +110,6 @@ class FileControl(ttk.LabelFrame):
         if self.state.file_selected_idx.get() < len(self.state.pdf_collection.pdfs) - 1:
             self.state.file_selected_idx.set(self.state.file_selected_idx.get() + 1)
 
-        if not self.state.page.labels.confirmed:
-            self.btn_next_file['state'] = 'disabled'
-
     def load_previous_file(self):
 
         if self.state.file_selected_idx.get() > 0:
@@ -125,6 +122,11 @@ class FileControl(ttk.LabelFrame):
         file_name, file = self.state.indexed_files[idx]
         self.lbl_file_name_value.config(text = file_name)
         self.lbl_file_idx_value.config(text = '%s / %s'%(idx + 1, n_pdfs))
+
+        if not self.state.page.labels.confirmed:
+            self.btn_next_file['state'] = 'disabled'
+        else:
+            self.btn_next_file['state'] = 'normal'
 
     def create_collection(self):
 
@@ -647,7 +649,7 @@ class BboxLabelControl(ttk.LabelFrame):
 
         if hasattr(self, 'label_bbox_id_dict'):
             if isinstance(self.state.page.labels.key_values, dict):
-                for k, v in self.state.page_bbox_text_entry.items():                    
+                for k, v in self.state.page_bbox_text_entry.items():
                     # if self.label_bbox_id_dict[k] != []:
                     self.state.page.labels.key_values[k] = v['string_var'].get()
                     print(v['string_var'].get())
@@ -655,8 +657,12 @@ class BboxLabelControl(ttk.LabelFrame):
             # write results to json
             import json
             with open('file.json', 'wt') as file:
-                print(self.state.page.labels.key_values)
-                json.dump(self.state.page.labels.key_values, file)
+                json_result = self.state.page.labels.key_values
+                idx = self.state.file_selected_idx.get()
+                file_name, _ = self.state.indexed_files[idx]
+                json_result['file_name'] = file_name
+                print(json_result)
+                json.dump(json_result, file)
 
 
         self.state.page.labels.confirmed = True
