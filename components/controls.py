@@ -93,8 +93,12 @@ class FileControl(ttk.LabelFrame):
         self._root().bind('y', lambda event: self.load_previous_file())
         self._root().bind('x', lambda event: self.load_next_file())
 
+        # add button to delete documents and close app
+        self.btn_finish_session = ttk.Button(self, text = 'Finish session', state = 'disabled', command = self.finish_session)
+        self.btn_finish_session.pack(side = 'top', padx = 2, pady = 2)
+
         # debug
-        debug = True
+        debug = False
         if debug:
             frm_debug = ttk.Frame(self)
             btn_reset_collection = ttk.Button(frm_debug, text = 'Debug: Reset all', command = self.reset_pdf_collection)
@@ -123,10 +127,13 @@ class FileControl(ttk.LabelFrame):
         self.lbl_file_name_value.config(text = file_name)
         self.lbl_file_idx_value.config(text = '%s / %s'%(idx + 1, n_pdfs))
 
+        # check if btn_next_file should be enabled
         if not self.state.page.labels.confirmed:
             self.btn_next_file['state'] = 'disabled'
+            self._root().unbind('x')
         else:
             self.btn_next_file['state'] = 'normal'
+            self._root().bind('x', lambda event: self.load_next_file())
 
     def create_collection(self):
 
@@ -160,6 +167,16 @@ class FileControl(ttk.LabelFrame):
 
         pdf_collection = PDFCollection(self.state.pdf_collection.path_to_files)
         pdf_collection.save('tmp/last_collection.pickle', overwrite = True)
+        self._root().destroy()
+
+    def finish_session(self):
+
+        os.makedirs('labels', exist_ok = True)
+        self.state.pdf_collection.save(f'labels/submission_{datetime.today().strftime("%Y-%m-%d_%H-%M-%S")}.pickle', overwrite = False)
+
+        path = self.state.pdf_collection.path_to_files
+        files = os.listdir(path)
+        for i in files: os.remove(os.path.join(path, i))
         self._root().destroy()
 
     def debug_print_state(self):
@@ -667,3 +684,10 @@ class BboxLabelControl(ttk.LabelFrame):
 
         self.state.page.labels.confirmed = True
         self.file_control.btn_next_file['state'] = 'normal'
+        self._root().bind('x', lambda event: self.file_control.load_next_file())
+
+        # check if btn_next_file should be enabled
+        idx = self.state.file_selected_idx.get()
+        n_pdfs = len(self.state.pdf_collection.pdfs)
+        if (idx + 1) == n_pdfs:
+            self.file_control.btn_finish_session['state'] = 'normal'
