@@ -523,6 +523,17 @@ class PageLevelProcessing(ttk.Frame):
                 # move to next label key
                 self.bbox_label_control.switch_label('next')
 
+
+# ...
+import datetime
+def validate(date_text):
+    try:
+        datetime.datetime.strptime(date_text, '%d.%m.%Y')
+    except ValueError:
+        raise ValueError("Incorrect data format, should be YYYY.MM.DD")
+
+
+
 class BboxLabelControl(ttk.LabelFrame):
 
     def __init__(self, master, state, page_analysis, file_control, only_values, hsn_df, tsn_df, *args, **kwargs):
@@ -696,20 +707,39 @@ class BboxLabelControl(ttk.LabelFrame):
                     print(v['string_var'].get())
                 self.populate_ent_widgets()
 
-        hsn = int(self.state.page.labels.key_values[4])
-        self.hsn_intid = self.hsn_df.loc[hsn].intid
-        tsn = self.state.page.labels.key_values[5]
-        tsn_row = self.tsn_df[self.tsn_df.strtsn == tsn[0:3]]
-        tsn_row = tsn_row[tsn_row.intid_strhsn == self.hsn_intid]
-        tsn_str = tsn_row.strname.values[0]
-        self.tsn_intid = tsn_row.intid.values[0]
-        self.intid_strwagnis = tsn_row.intid_strwagnis.values[0]
+        exit = []
 
-        self.lbl_hsn_value.config(text = self.hsn_df.loc[hsn].strname)
-        self.lbl_tsn_value.config(text = tsn_str)
+        try:
+            validate(self.state.page.labels.key_values[3])
+        except:
+            exit.append('Date')
+        try:
+            hsn = int(self.state.page.labels.key_values[4])
+            self.hsn_intid = self.hsn_df.loc[hsn].intid
+            self.lbl_hsn_value.config(text = self.hsn_df.loc[hsn].strname)
+        except:
+            exit.append('HSN')
+        try:
+            tsn = self.state.page.labels.key_values[5]
+            tsn_row = self.tsn_df[self.tsn_df.strtsn == tsn[0:3]]
+            tsn_row = tsn_row[tsn_row.intid_strhsn == self.hsn_intid]
+            tsn_str = tsn_row.strname.values[0]
+            self.tsn_intid = tsn_row.intid.values[0]
+            self.intid_strwagnis = tsn_row.intid_strwagnis.values[0]
+            self.lbl_tsn_value.config(text = tsn_str)
+        except:
+            exit.append('TSN')
 
-        # intid_strhersteller intid_strtyp intid_strwagnis
-
+        if exit != []:
+            dialog = SimpleDialog(
+                self._root(),
+                text = f"Can't recognize {' '.join(exit)}",
+                buttons=["Confirm"],
+                default=0,
+                cancel=1,
+                title="Confirmation"
+            )
+            dialog.go()
 
     def update_key_text(self):
 
