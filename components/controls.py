@@ -697,11 +697,14 @@ class BboxLabelControl(ttk.LabelFrame):
                 self.populate_ent_widgets()
 
         hsn = int(self.state.page.labels.key_values[4])
+        hsn_intid = self.hsn_df.loc[hsn].intid
         tsn = self.state.page.labels.key_values[5]
-        print(tsn[0:3])
+        tsn_row = self.tsn_df[self.tsn_df.strtsn == tsn[0:3]]
+        tsn_row = tsn_row[tsn_row.intid_strhsn == hsn_intid]
+        tsn_str = tsn_row.strname.values[0]
 
         self.lbl_hsn_value.config(text = self.hsn_df.loc[hsn].strname)
-        self.lbl_tsn_value.config(text = self.tsn_df.loc[tsn[0:3]].strname)
+        self.lbl_tsn_value.config(text = tsn_str)
 
 
 

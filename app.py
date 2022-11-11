@@ -83,7 +83,7 @@ if __name__ == '__main__':
     ## load HSN values
     import pandas as pd
     config['hsn_df'] = pd.read_csv('hsn.csv').set_index('strhsn')
-    config['tsn_df'] = pd.read_csv('tsn.csv').set_index('strtsn')
+    config['tsn_df'] = pd.read_csv('tsn.csv')
 
     # create collection from example files if started for the first time
     if os.path.exists('tmp/last_collection.pickle'):
