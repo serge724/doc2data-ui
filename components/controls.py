@@ -291,7 +291,7 @@ class PageControl(ttk.LabelFrame):
 # ...
 class PageLevelProcessing(ttk.Frame):
 
-    def __init__(self, master, state, file_control, only_values, *args, **kwargs):
+    def __init__(self, master, state, file_control, only_values, hsn_df, tsn_df, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # attach state and callbacks
@@ -303,7 +303,7 @@ class PageLevelProcessing(ttk.Frame):
         # define ui components
         self.canvas = PageCanvas(master, state, bg = 'gray')
         self.control = PageControl(master, state, self, relief = 'groove', borderwidth = 3)
-        self.bbox_label_control = BboxLabelControl(master, state, self, file_control, only_values, relief = 'groove', borderwidth = 3)
+        self.bbox_label_control = BboxLabelControl(master, state, self, file_control, only_values, hsn_df, tsn_df, relief = 'groove', borderwidth = 3)
 
         # initiate variable attributes
         self.processed_image = None
@@ -525,13 +525,15 @@ class PageLevelProcessing(ttk.Frame):
 
 class BboxLabelControl(ttk.LabelFrame):
 
-    def __init__(self, master, state, page_analysis, file_control, only_values, *args, **kwargs):
+    def __init__(self, master, state, page_analysis, file_control, only_values, hsn_df, tsn_df, *args, **kwargs):
         super().__init__(master, text = 'Labeling', *args, **kwargs)
 
         # attach state and link parent component
         self.state = state
         self.page_analysis = page_analysis
         self.file_control = file_control
+        self.hsn_df = hsn_df
+        self.tsn_df = tsn_df
 
         self.style = ttk.Style(self)
         self.style.configure('TButton', width = 15)
@@ -599,6 +601,23 @@ class BboxLabelControl(ttk.LabelFrame):
 
         frm_bbox_labeling.pack(side = 'top', pady = 20)
 
+        frm_value_check = ttk.Frame(self)
+        btn_check_values = ttk.Button(
+            master = frm_value_check,
+            text = 'Check values',
+            command = self.check_values
+        )
+        btn_check_values.grid(row = 0, column = 0, columnspan = 2, padx = 2, pady = 2)
+        lbl_hsn_key = ttk.Label(frm_value_check, text = 'HSN:')
+        lbl_hsn_key.grid(row = 1, column = 0, padx = 2, pady = 2)
+        self.lbl_hsn_value = ttk.Label(frm_value_check, text = 'XXXXX')
+        self.lbl_hsn_value.grid(row = 1, column = 1, padx = 2, pady = 2)
+        lbl_tsn_key = ttk.Label(frm_value_check, text = 'TSN:')
+        lbl_tsn_key.grid(row = 2, column = 0, padx = 2, pady = 2)
+        self.lbl_tsn_value = ttk.Label(frm_value_check, text = 'XXXXX')
+        self.lbl_tsn_value.grid(row = 2, column = 1, padx = 2, pady = 2)
+        frm_value_check.pack(side = 'top', pady = 20)
+
         btn_update_key_text = ttk.Button(
             master = self,
             text = 'Save result',
@@ -663,6 +682,28 @@ class BboxLabelControl(ttk.LabelFrame):
                 self.state.page.labels.key_values[k] = joined_tokens
 
         self.populate_ent_widgets()
+
+    def check_values(self):
+
+        print(self.hsn_df)
+        print(self.tsn_df)
+
+        if hasattr(self, 'label_bbox_id_dict'):
+            if isinstance(self.state.page.labels.key_values, dict):
+                for k, v in self.state.page_bbox_text_entry.items():
+                    # if self.label_bbox_id_dict[k] != []:
+                    self.state.page.labels.key_values[k] = v['string_var'].get()
+                    print(v['string_var'].get())
+                self.populate_ent_widgets()
+
+        hsn = int(self.state.page.labels.key_values[4])
+        tsn = self.state.page.labels.key_values[5]
+        print(tsn[0:3])
+
+        self.lbl_hsn_value.config(text = self.hsn_df.loc[hsn].strname)
+        self.lbl_tsn_value.config(text = self.tsn_df.loc[tsn[0:3]].strname)
+
+
 
     def update_key_text(self):
 

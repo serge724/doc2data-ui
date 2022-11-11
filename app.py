@@ -4,6 +4,7 @@ from doc2data.pdf import PDFCollection
 from components.state import State
 from components.controls import FileControl, PageControl, PageLevelProcessing
 
+
 # define main app class
 class App:
 
@@ -36,14 +37,19 @@ class App:
             # text_font.configure(size=16)
 
 
-
-
         # initiate internal state
         self.state = State(self.root, pdf_collection, bbox_label_dict)
 
         # define UI elements
         file_control = FileControl(self.root, self.state, relief = 'groove', borderwidth = 3)
-        page_processing = PageLevelProcessing(self.root, self.state, file_control, config['only_values'])
+        page_processing = PageLevelProcessing(
+            self.root,
+            self.state,
+            file_control,
+            config['only_values'],
+            config['hsn_df'],
+            config['tsn_df']
+        )
 
         # place UI elements
         page_processing.canvas.frm_container.pack(side = 'left', anchor = 'n', fill = 'both', expand = True, padx = 10, pady = 10)
@@ -74,6 +80,10 @@ if __name__ == '__main__':
     args = parser.parse_args()
     with open(args.config, 'rb') as file:
         config = tomli.load(file)
+    ## load HSN values
+    import pandas as pd
+    config['hsn_df'] = pd.read_csv('hsn.csv').set_index('strhsn')
+    config['tsn_df'] = pd.read_csv('tsn.csv').set_index('strtsn')
 
     # create collection from example files if started for the first time
     if os.path.exists('tmp/last_collection.pickle'):
