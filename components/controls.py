@@ -697,15 +697,18 @@ class BboxLabelControl(ttk.LabelFrame):
                 self.populate_ent_widgets()
 
         hsn = int(self.state.page.labels.key_values[4])
-        hsn_intid = self.hsn_df.loc[hsn].intid
+        self.hsn_intid = self.hsn_df.loc[hsn].intid
         tsn = self.state.page.labels.key_values[5]
         tsn_row = self.tsn_df[self.tsn_df.strtsn == tsn[0:3]]
-        tsn_row = tsn_row[tsn_row.intid_strhsn == hsn_intid]
+        tsn_row = tsn_row[tsn_row.intid_strhsn == self.hsn_intid]
         tsn_str = tsn_row.strname.values[0]
+        self.tsn_intid = tsn_row.intid.values[0]
+        self.intid_strwagnis = tsn_row.intid_strwagnis.values[0]
 
         self.lbl_hsn_value.config(text = self.hsn_df.loc[hsn].strname)
         self.lbl_tsn_value.config(text = tsn_str)
 
+        # intid_strhersteller intid_strtyp intid_strwagnis
 
 
     def update_key_text(self):
@@ -734,6 +737,9 @@ class BboxLabelControl(ttk.LabelFrame):
                     json_result = self.state.page.labels.key_values
                     idx = self.state.file_selected_idx.get()
                     file_name, _ = self.state.indexed_files[idx]
+                    json_result['intid_strhersteller'] = self.hsn_intid
+                    json_result['intid_strtyp'] = self.tsn_intid
+                    json_result['intid_strwagnis'] = self.intid_strwagnis
                     json_result['file_name'] = file_name
                     print(json_result)
                     json.dump(json_result, file)
