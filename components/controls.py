@@ -635,7 +635,7 @@ class BboxLabelControl(ttk.LabelFrame):
         lbl_tsn_key.grid(row = 1, column = 1, padx = 2, pady = 2)
         self.lbl_tsn_value = ttk.Label(frm_value_check, text = '')
         self.lbl_tsn_value.grid(row = 1, column = 2, padx = 2, pady = 2)
-        frm_value_check.pack(side = 'top', pady = 10, fill = "x", expand = True)
+        frm_value_check.pack(side = 'top', padx = 2, pady = 2, expand = True)
 
         frm_finish_file = ttk.Frame(self)
         self.btn_update_key_text = ttk.Button(
@@ -650,7 +650,7 @@ class BboxLabelControl(ttk.LabelFrame):
             command = self.skip_file
         )
         self.btn_skip_file.pack(side = 'left', padx = 2, pady = 2)
-        frm_finish_file.pack(side = 'top', pady = 2)
+        frm_finish_file.pack(side = 'top', padx = 2, pady = 2)
 
         # temp
         self._root().bind('e', lambda event: self.extract_text())
