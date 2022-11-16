@@ -420,6 +420,15 @@ class PageLevelProcessing(ttk.Frame):
         if self.state.page.labels.tokens is not None:
             self.after(900 * self.delay, lambda: self.state.page_edit_mode.set('ocr'))
 
+        # ...
+        if os.path.exists('upload.json'):
+            os.remove('upload.json')
+            self.bbox_label_control.lbl_hsn_value.config(text = "")
+            self.bbox_label_control.lbl_tsn_value.config(text = "")
+
+        # save results should be deactivated every time file changes to ensure values are checked
+        self.bbox_label_control.btn_update_key_text['state'] = 'disabled'
+
     # callback that handels change of edit mode
     def on_mode_change(self, *args):
 
@@ -617,26 +626,48 @@ class BboxLabelControl(ttk.LabelFrame):
             text = 'Check values',
             command = self.check_values
         )
-        btn_check_values.grid(row = 0, column = 0, columnspan = 2, padx = 2, pady = 2)
+        btn_check_values.grid(row = 0, column = 0, columnspan = 1, rowspan = 2, padx = 2, pady = 2)
         lbl_hsn_key = ttk.Label(frm_value_check, text = 'HSN:')
-        lbl_hsn_key.grid(row = 1, column = 0, padx = 2, pady = 2)
-        self.lbl_hsn_value = ttk.Label(frm_value_check, text = 'XXXXX')
-        self.lbl_hsn_value.grid(row = 1, column = 1, padx = 2, pady = 2)
+        lbl_hsn_key.grid(row = 0, column = 1, padx = 2, pady = 2)
+        self.lbl_hsn_value = ttk.Label(frm_value_check, text = '')
+        self.lbl_hsn_value.grid(row = 0, column = 2, padx = 2, pady = 2)
         lbl_tsn_key = ttk.Label(frm_value_check, text = 'TSN:')
-        lbl_tsn_key.grid(row = 2, column = 0, padx = 2, pady = 2)
-        self.lbl_tsn_value = ttk.Label(frm_value_check, text = 'XXXXX')
-        self.lbl_tsn_value.grid(row = 2, column = 1, padx = 2, pady = 2)
-        frm_value_check.pack(side = 'top', pady = 20)
+        lbl_tsn_key.grid(row = 1, column = 1, padx = 2, pady = 2)
+        self.lbl_tsn_value = ttk.Label(frm_value_check, text = '')
+        self.lbl_tsn_value.grid(row = 1, column = 2, padx = 2, pady = 2)
+        frm_value_check.pack(side = 'top', pady = 10, fill = "x", expand = True)
 
-        btn_update_key_text = ttk.Button(
-            master = self,
+        frm_finish_file = ttk.Frame(self)
+        self.btn_update_key_text = ttk.Button(
+            master = frm_finish_file,
             text = 'Save result',
             command = self.update_key_text
         )
-        btn_update_key_text.pack(side = 'top', padx = 2, pady = 2)
+        self.btn_update_key_text.pack(side = 'left', padx = 2, pady = 2)
+        self.btn_skip_file = ttk.Button(
+            master = frm_finish_file,
+            text = 'Skip file',
+            command = self.skip_file
+        )
+        self.btn_skip_file.pack(side = 'left', padx = 2, pady = 2)
+        frm_finish_file.pack(side = 'top', pady = 2)
 
         # temp
         self._root().bind('e', lambda event: self.extract_text())
+
+    def skip_file(self):
+        print('file skipped')
+
+        self.state.page.labels.confirmed = True
+        self.file_control.btn_next_file['state'] = 'normal'
+        self._root().bind('x', lambda event: self.file_control.load_next_file())
+
+        # check if finish session should be enabled
+        idx = self.state.file_selected_idx.get()
+        n_pdfs = len(self.state.pdf_collection.pdfs)
+        if (idx + 1) == n_pdfs:
+            self.file_control.btn_finish_session['state'] = 'normal'
+
 
     # switch between labels in bbox_label_dict
     def switch_label(self, direction):
@@ -739,6 +770,21 @@ class BboxLabelControl(ttk.LabelFrame):
                 title="Confirmation"
             )
             dialog.go()
+        else:
+            # write results to json
+            import json
+            with open('upload.json', 'wt') as file:
+                json_result = self.state.page.labels.key_values
+                idx = self.state.file_selected_idx.get()
+                file_name, _ = self.state.indexed_files[idx]
+                json_result['intid_strhersteller'] = self.hsn_intid
+                json_result['intid_strtyp'] = self.tsn_intid
+                json_result['intid_strwagnis'] = self.intid_strwagnis
+                json_result['file_name'] = file_name
+                print(json_result)
+                json.dump(json_result, file)
+            # activate save button
+            self.btn_update_key_text['state'] = 'active'
 
     def update_key_text(self):
 
@@ -752,27 +798,6 @@ class BboxLabelControl(ttk.LabelFrame):
         )
 
         if dialog.go() == 0:
-
-            if hasattr(self, 'label_bbox_id_dict'):
-                if isinstance(self.state.page.labels.key_values, dict):
-                    for k, v in self.state.page_bbox_text_entry.items():
-                        # if self.label_bbox_id_dict[k] != []:
-                        self.state.page.labels.key_values[k] = v['string_var'].get()
-                        print(v['string_var'].get())
-                    self.populate_ent_widgets()
-                # write results to json
-                import json
-                with open('file.json', 'wt') as file:
-                    json_result = self.state.page.labels.key_values
-                    idx = self.state.file_selected_idx.get()
-                    file_name, _ = self.state.indexed_files[idx]
-                    json_result['intid_strhersteller'] = self.hsn_intid
-                    json_result['intid_strtyp'] = self.tsn_intid
-                    json_result['intid_strwagnis'] = self.intid_strwagnis
-                    json_result['file_name'] = file_name
-                    print(json_result)
-                    json.dump(json_result, file)
-
 
             self.state.page.labels.confirmed = True
             self.file_control.btn_next_file['state'] = 'normal'
