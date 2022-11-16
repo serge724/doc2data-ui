@@ -656,23 +656,32 @@ class BboxLabelControl(ttk.LabelFrame):
         self._root().bind('e', lambda event: self.extract_text())
 
     def skip_file(self):
-        print('file skipped')
 
-        # write results to json
-        import json
-        idx = self.state.file_selected_idx.get()
-        file_name, _ = self.state.indexed_files[idx]
-        json_result = {
-            'file_name': file_name,
-            'skipped': True
-        }
-        print(json_result)
-        with open('upload.json', 'wt') as file:
-            json.dump(json_result, file)
+        dialog = SimpleDialog(
+            self._root(),
+            text="Please confirm your entry.",
+            buttons=["Confirm", "Cancel"],
+            default=0,
+            cancel=1,
+            title="Confirmation"
+        )
+        if dialog.go() == 0:
 
-        self.state.page.labels.confirmed = True
-        self.file_control.btn_next_file['state'] = 'normal'
-        self._root().bind('x', lambda event: self.file_control.load_next_file())
+            # write results to json
+            import json
+            idx = self.state.file_selected_idx.get()
+            file_name, _ = self.state.indexed_files[idx]
+            json_result = {
+                'file_name': file_name,
+                'skipped': True
+            }
+            print(json_result)
+            with open('upload.json', 'wt') as file:
+                json.dump(json_result, file)
+
+            self.state.page.labels.confirmed = True
+            self.file_control.btn_next_file['state'] = 'normal'
+            self._root().bind('x', lambda event: self.file_control.load_next_file())
 
         # check if finish session should be enabled
         idx = self.state.file_selected_idx.get()
