@@ -658,6 +658,18 @@ class BboxLabelControl(ttk.LabelFrame):
     def skip_file(self):
         print('file skipped')
 
+        # write results to json
+        import json
+        idx = self.state.file_selected_idx.get()
+        file_name, _ = self.state.indexed_files[idx]
+        json_result = {
+            'file_name': file_name,
+            'skipped': True
+        }
+        print(json_result)
+        with open('upload.json', 'wt') as file:
+            json.dump(json_result, file)
+
         self.state.page.labels.confirmed = True
         self.file_control.btn_next_file['state'] = 'normal'
         self._root().bind('x', lambda event: self.file_control.load_next_file())
