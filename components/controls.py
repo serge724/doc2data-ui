@@ -173,11 +173,14 @@ class FileControl(ttk.LabelFrame):
     def finish_session(self):
 
         os.makedirs('labels', exist_ok = True)
+        os.makedirs('processed_files', exist_ok = True)
         self.state.pdf_collection.save(f'labels/submission_{datetime.today().strftime("%Y-%m-%d_%H-%M-%S")}.pickle', overwrite = False)
 
         path = self.state.pdf_collection.path_to_files
         files = os.listdir(path)
-        for i in files: os.remove(os.path.join(path, i))
+        for i in files:            
+            os.system(f'cp {os.path.join(path, i)} {os.path.join("processed_files", i)}')
+            os.remove(os.path.join(path, i))
         os.remove('tmp/last_collection.pickle')
         self._root().destroy()
 
